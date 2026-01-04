@@ -136,7 +136,7 @@ async function runAnalysis() {
         const base64Data = currentImageBase64.split(',')[1];
 
         const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-1.5-flash',
             contents: {
                 parts: [
                     { inlineData: { mimeType: 'image/jpeg', data: base64Data } },
