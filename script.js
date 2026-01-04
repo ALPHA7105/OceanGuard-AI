@@ -116,10 +116,10 @@ async function runAnalysis() {
     const analyzeBtn = document.getElementById('btn-analyze');
     const errorContainer = document.getElementById('analysis-error');
 
-    if (!resultsContainer || !analyzeBtn || !errorContainer) return;
-
     analyzeBtn.disabled = true;
     errorContainer.classList.add('hidden');
+    
+    // Loading State UI
     resultsContainer.innerHTML = `
         <div class="flex flex-col items-center">
             <div class="flex gap-2 mb-4">
@@ -132,37 +132,35 @@ async function runAnalysis() {
     `;
 
     try {
-        const ai = new GoogleGenAI("AIzaSyCxXnMK5fQE5Jf4e-DQhmd0kAJhbxjjFNQ");
+        // 1. Initialize the model correctly
+        const genAI = new GoogleGenAI("YOUR_API_KEY_HERE"); 
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
         const base64Data = currentImageBase64.split(',')[1];
 
-        const response = await ai.models.generateContent({
-            model: 'gemini-1.5-flash',
-            contents: {
-                parts: [
-                    { inlineData: { mimeType: 'image/jpeg', data: base64Data } },
-                    { text: "Analyze marine pollution in this image. Identify plastic/waste items, severity (low/medium/high), and conservation advice. Response must be JSON." }
-                ]
-            },
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: {
-                    type: Type.OBJECT,
-                    properties: {
-                        detectedItems: { type: Type.ARRAY, items: { type: Type.STRING } },
-                        severity: { type: Type.STRING },
-                        description: { type: Type.STRING },
-                        recommendations: { type: Type.ARRAY, items: { type: Type.STRING } }
-                    },
-                    required: ["detectedItems", "severity", "description", "recommendations"]
-                }
+        // 2. Format the request according to the latest SDK
+        const prompt = "Analyze marine pollution in this image. Identify plastic/waste items, severity (low/medium/high), and conservation advice. Response must be JSON.";
+        
+        const imagePart = {
+            inlineData: {
+                data: base64Data,
+                mimeType: "image/jpeg"
             }
-        });
+        };
 
-        // Use .text property as per SDK rules
-        const result = JSON.parse(response.text);
-        renderResults(result);
+        const result = await model.generateContent([prompt, imagePart]);
+        const response = await result.response;
+        let text = response.text();
+        
+        // 3. Clean the JSON (Removes ```json ... ``` blocks if present)
+        const cleanJson = text.replace(/```json|```/g, "").trim();
+        const data = JSON.parse(cleanJson);
+        
+        renderResults(data);
+
     } catch (err) {
-        errorContainer.textContent = err.message || "Failed to analyze. Check your connection.";
+        console.error(err);
+        errorContainer.textContent = "AI Error: Please ensure your API Key is valid.";
         errorContainer.classList.remove('hidden');
         resultsContainer.innerHTML = `<div class="text-5xl opacity-20">❌</div>`;
     } finally {
