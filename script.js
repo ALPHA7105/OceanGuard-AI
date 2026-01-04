@@ -131,42 +131,45 @@ async function runAnalysis() {
         </div>
     `;
 
-    try {
-        // 1. Initialize the model correctly
-        const genAI = new GoogleGenAI("AIzaSyCxXnMK5fQE5Jf4e-DQhmd0kAJhbxjjFNQ"); 
+try {
+        // REPLACE "YOUR_API_KEY_HERE" with your actual AIZA... key string
+        const API_KEY = "AIzaSyCxXnMK5fQE5Jf4e-DQhmd0kAJhbxjjFNQ"; 
+        
+        const genAI = new GoogleGenAI(API_KEY); 
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const base64Data = currentImageBase64.split(',')[1];
 
-        // 2. Format the request according to the latest SDK
-        const prompt = "Analyze marine pollution in this image. Identify plastic/waste items, severity (low/medium/high), and conservation advice. Response must be JSON.";
-        
-        const imagePart = {
-            inlineData: {
-                data: base64Data,
-                mimeType: "image/jpeg"
+        // This format is the most stable for the 1.5-flash model
+        const result = await model.generateContent([
+            "Analyze marine pollution in this image. Identify plastic/waste items, severity (low/medium/high), and conservation advice. Response must be JSON.",
+            {
+                inlineData: {
+                    data: base64Data,
+                    mimeType: "image/jpeg"
+                }
             }
-        };
+        ]);
 
-        const result = await model.generateContent([prompt, imagePart]);
         const response = await result.response;
-        let text = response.text();
+        const text = response.text();
         
-        // 3. Clean the JSON (Removes ```json ... ``` blocks if present)
+        // Safety check for JSON formatting
         const cleanJson = text.replace(/```json|```/g, "").trim();
         const data = JSON.parse(cleanJson);
         
         renderResults(data);
 
     } catch (err) {
-        console.error(err);
-        errorContainer.textContent = "AI Error: Please ensure your API Key is valid.";
+        console.error("Analysis Error:", err);
+        // This will help you see if it's an API key issue or something else
+        errorContainer.textContent = `Error: ${err.message}`;
         errorContainer.classList.remove('hidden');
-        resultsContainer.innerHTML = `<div class="text-5xl opacity-20">❌</div>`;
     } finally {
         analyzeBtn.disabled = false;
     }
 }
+
 
 function renderResults(data) {
     const container = document.getElementById('results-container');
