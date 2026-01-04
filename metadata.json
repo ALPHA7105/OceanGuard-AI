@@ -1,0 +1,7 @@
+{
+  "name": "Copy of Copy of OceanGuard: SDG 14 AI Explorer",
+  "description": "An educational platform designed for students to learn about SDG 14 (Life Below Water) and use AI to detect marine plastic pollution in images.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
