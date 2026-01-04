@@ -207,8 +207,13 @@ function initCharts() {
     const typeCanvas = document.getElementById('typeChart');
     
     if (!prodCanvas || !typeCanvas) return;
-    if (productionChart) productionChart.destroy();
-    if (typesChart) typesChart.destroy();
+
+    if (productionChart instanceof Chart) {
+        productionChart.destroy();
+    }
+    if (typesChart instanceof Chart) {
+        typesChart.destroy();
+    }
 
     const prodCtx = prodCanvas.getContext('2d');
     const typeCtx = typeCanvas.getContext('2d');
@@ -227,10 +232,12 @@ function initCharts() {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: {
+                duration: 1000 
+            },
             plugins: { legend: { display: false } },
             scales: {
-                y: { grid: { display: false }, ticks: { font: { size: 10 } } },
-                x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+                y: { beginAtZero: true, grid: { display: false } }
             }
         }
     });
