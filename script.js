@@ -133,7 +133,7 @@ async function runAnalysis() {
 
     try {
         // 1. Initialize the model correctly
-        const genAI = new GoogleGenAI("YOUR_API_KEY_HERE"); 
+        const genAI = new GoogleGenAI("AIzaSyCxXnMK5fQE5Jf4e-DQhmd0kAJhbxjjFNQ"); 
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const base64Data = currentImageBase64.split(',')[1];
