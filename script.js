@@ -132,7 +132,7 @@ async function runAnalysis() {
     `;
 
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI("AIzaSyCxXnMK5fQE5Jf4e-DQhmd0kAJhbxjjFNQ");
         const base64Data = currentImageBase64.split(',')[1];
 
         const response = await ai.models.generateContent({
