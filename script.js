@@ -134,7 +134,7 @@ async function runAnalysis() {
 try {
         const API_KEY = "AIzaSyCxXnMK5fQE5Jf4e-DQhmd0kAJhbxjjFNQ"; 
         
-        const genAI = new GoogleGenAI(AIzaSyCxXnMK5fQE5Jf4e-DQhmd0kAJhbxjjFNQ); 
+        const genAI = new GoogleGenAI("AIzaSyCxXnMK5fQE5Jf4e-DQhmd0kAJhbxjjFNQ"); 
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const base64Data = currentImageBase64.split(',')[1];
