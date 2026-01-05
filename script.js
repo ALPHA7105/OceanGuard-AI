@@ -30,6 +30,34 @@ window.addEventListener('DOMContentLoaded', () => {
     initDetectHandlers();
 });
 
+
+window.navigateTo = (section) => {
+    // 1. Update Tabs
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active-tab'));
+    const targetTab = document.getElementById(`tab-${section}`);
+    if (targetTab) targetTab.classList.add('active-tab');
+
+    // 2. Toggle Sections
+    document.querySelectorAll('section').forEach(sec => sec.classList.add('hidden'));
+    const target = document.getElementById(`section-${section}`);
+    
+    if (target) {
+        target.classList.remove('hidden');
+        target.classList.add('animate-fadeIn');
+        
+        // 3. Trigger Charts ONLY when we land on 'impact'
+        if (section === 'impact') {
+            // Give the browser 300ms to finish the "unhide" animation
+            setTimeout(() => {
+                initCharts();
+            }, 300);
+        }
+    }
+
+    activeSection = section;
+};
+
+/*
 // --- Navigation Logic ---
 window.navigateTo = (section) => {
     if (activeSection === section) return; // Don't reload if already here
@@ -52,7 +80,7 @@ window.navigateTo = (section) => {
         setTimeout(initCharts, 200); 
     }
 };
-
+*/
 // --- AI Detection Logic ---
 function initDetectHandlers() {
     const fileInput = document.getElementById('file-input');
@@ -148,19 +176,23 @@ async function runAnalysis() {
 
 // --- Data Visualization ---
 function initCharts() {
-    // 1. Get both canvases
     const prodCanvas = document.getElementById('prodChart');
     const typeCanvas = document.getElementById('typeChart');
     
-    // 2. Only run if BOTH are found and we haven't built them yet
-    if (!prodCanvas || !typeCanvas || chartsCreated) return;
+    if (!prodCanvas || !typeCanvas) return;
 
-    chartsCreated = true; // Lock the gate immediately
+    // IMPORTANT: Destroy old charts if they exist to prevent memory leaks/crashes
+    if (productionChart instanceof Chart) {
+        productionChart.destroy();
+    }
+    if (typesChart instanceof Chart) {
+        typesChart.destroy();
+    }
 
     const prodCtx = prodCanvas.getContext('2d');
     const typeCtx = typeCanvas.getContext('2d');
 
-    // BAR CHART
+    // Create Bar Chart
     productionChart = new Chart(prodCtx, {
         type: 'bar',
         data: {
@@ -174,12 +206,12 @@ function initCharts() {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false, // Essential
+            maintainAspectRatio: false,
             plugins: { legend: { display: false } }
         }
     });
 
-    // DOUGHNUT CHART
+    // Create Doughnut Chart
     typesChart = new Chart(typeCtx, {
         type: 'doughnut',
         data: {
@@ -192,7 +224,7 @@ function initCharts() {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false, // Essential
+            maintainAspectRatio: false,
             plugins: {
                 legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }
             },
