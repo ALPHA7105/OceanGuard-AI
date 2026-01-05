@@ -208,11 +208,14 @@ function initCharts() {
     
     if (!prodCanvas || !typeCanvas) return;
 
-    if (productionChart instanceof Chart) {
+    // DESTROY completely before creating
+    if (productionChart) {
         productionChart.destroy();
+        productionChart = null; // Force clear from memory
     }
-    if (typesChart instanceof Chart) {
+    if (typesChart) {
         typesChart.destroy();
+        typesChart = null; // Force clear from memory
     }
 
     const prodCtx = prodCanvas.getContext('2d');
