@@ -146,6 +146,63 @@ async function runAnalysis() {
     }
 }
 
+// --- Data Visualization ---
+function initCharts() {
+    // 1. Get both canvases
+    const prodCanvas = document.getElementById('prodChart');
+    const typeCanvas = document.getElementById('typeChart');
+    
+    // 2. Only run if BOTH are found and we haven't built them yet
+    if (!prodCanvas || !typeCanvas || chartsCreated) return;
+
+    chartsCreated = true; // Lock the gate immediately
+
+    const prodCtx = prodCanvas.getContext('2d');
+    const typeCtx = typeCanvas.getContext('2d');
+
+    // BAR CHART
+    productionChart = new Chart(prodCtx, {
+        type: 'bar',
+        data: {
+            labels: ['1950', '1970', '1990', '2010', '2020', '2040'],
+            datasets: [{
+                label: 'Global Plastic (Tons)',
+                data: [2, 35, 120, 310, 460, 800],
+                backgroundColor: '#0ea5e9',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false, // Essential
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    // DOUGHNUT CHART
+    typesChart = new Chart(typeCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['PE', 'PP', 'PVC', 'PET', 'Other'],
+            datasets: [{
+                data: [34, 19, 16, 7, 24],
+                backgroundColor: ['#0ea5e9', '#0284c7', '#0369a1', '#075985', '#0c4a6e'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false, // Essential
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }
+            },
+            cutout: '70%'
+        }
+    });
+}
+
+
+/*
 // --- Data Visualization (CRASH-PROOF) ---
 function initCharts() {
     const prodCanvas = document.getElementById('prodChart');
@@ -170,3 +227,6 @@ function initCharts() {
         }
     });
 }
+*/
+
+
