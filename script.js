@@ -98,40 +98,52 @@ async function handleFile(file) {
 
 async function runAnalysis() {
     if (!currentImageBase64) return;
+
     const resultsContainer = document.getElementById('results-container');
     const analyzeBtn = document.getElementById('btn-analyze');
+    const errorContainer = document.getElementById('analysis-error');
+
     analyzeBtn.disabled = true;
+    errorContainer.classList.add('hidden');
+    errorContainer.textContent = ""; // Clear previous error
+    
+    resultsContainer.innerHTML = `<div class="flex flex-col items-center"><p class="animate-pulse text-sky-600 font-bold">AI Analyzing Waves...</p></div>`;
 
     try {
-        // HARDCODED KEY - Guaranteed to work in browser
-        const genAI = new GoogleGenAI("AIzaSyCxXnMK5fQE5Jf4e-DQhmd0kAJhbxjjFNQ"); 
+        const API_KEY = "AIzaSyCxXnMK5fQE5Jf4e-DQhmd0kAJhbxjjFNQ"; 
+        const genAI = new GoogleGenAI(API_KEY); 
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const base64Data = currentImageBase64.split(',')[1];
+
+        // Strict prompt to ensure valid JSON
+        const prompt = "Analyze this marine image. Return ONLY a JSON object with: { \"severity\": \"low\"|\"medium\"|\"high\", \"detectedItems\": [], \"description\": \"\", \"recommendations\": [] }";
+
         const result = await model.generateContent([
-            "Analyze marine pollution in this image. Identify plastic/waste items, severity (low/medium/high), and conservation advice. Response must be JSON.",
+            prompt,
             { inlineData: { data: base64Data, mimeType: "image/jpeg" } }
         ]);
 
-        const text = result.response.text();
-        const cleanJson = text.replace(/```json|```/g, "").trim();
-        renderResults(JSON.parse(cleanJson));
+        const response = await result.response;
+        let text = response.text();
+        
+        // --- CLEAN THE JSON ---
+        // This removes any extra text or markdown the AI might have added
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) throw new Error("AI returned invalid data format");
+        
+        const data = JSON.parse(jsonMatch[0]);
+        renderResults(data);
+
     } catch (err) {
-        console.error(err);
-        document.getElementById('analysis-error').classList.remove('hidden');
+        console.error("Analysis Error:", err);
+        errorContainer.classList.remove('hidden');
+        // This will now show the REAL error message in the red box
+        errorContainer.textContent = "Error: " + (err.message || "Connection failed. Check your internet.");
+        resultsContainer.innerHTML = `<div class="text-5xl opacity-20">❌</div>`;
     } finally {
         analyzeBtn.disabled = false;
     }
-}
-
-function renderResults(data) {
-    const container = document.getElementById('results-container');
-    container.innerHTML = `
-        <div class="p-4 bg-sky-50 rounded-xl">
-            <h3 class="font-bold text-sky-900">${data.severity.toUpperCase()} SEVERITY</h3>
-            <p class="text-sm text-gray-700 mt-2">${data.description}</p>
-        </div>
-    `;
 }
 
 // --- Data Visualization (CRASH-PROOF) ---
