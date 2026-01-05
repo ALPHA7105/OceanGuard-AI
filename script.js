@@ -133,6 +133,62 @@ async function runAnalysis() {
 
     analyzeBtn.disabled = true;
     errorContainer.classList.add('hidden');
+    
+    resultsContainer.innerHTML = `<div class="flex flex-col items-center"><p class="animate-pulse text-sky-600 font-bold">Connecting to Gemini...</p></div>`;
+
+    try {
+        // 1. DEFINE KEY DIRECTLY HERE
+        const MY_KEY = "AIzaSyCxXnMK5fQE5Jf4e-DQhmd0kAJhbxjjFNQ"; 
+        
+        // 2. INITIALIZE CLIENT
+        const genAI = new GoogleGenAI(MY_KEY); 
+        
+        // 3. INITIALIZE MODEL
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+        const base64Data = currentImageBase64.split(',')[1];
+
+        const result = await model.generateContent([
+            "Analyze marine pollution in this image. Return ONLY a JSON object with: { \"severity\": \"low\"|\"medium\"|\"high\", \"detectedItems\": [], \"description\": \"\", \"recommendations\": [] }",
+            {
+                inlineData: {
+                    data: base64Data,
+                    mimeType: "image/jpeg"
+                }
+            }
+        ]);
+
+        const response = await result.response;
+        const text = response.text();
+        
+        // Safety Clean for JSON
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) throw new Error("AI returned invalid format");
+        
+        const data = JSON.parse(jsonMatch[0]);
+        renderResults(data);
+
+    } catch (err) {
+        console.error("Critical API Error:", err);
+        errorContainer.classList.remove('hidden');
+        // This will tell you if the key is actually missing or just rejected
+        errorContainer.innerHTML = `<strong>Error:</strong> ${err.message}`;
+        resultsContainer.innerHTML = `<div class="text-5xl opacity-20">❌</div>`;
+    } finally {
+        analyzeBtn.disabled = false;
+    }
+}
+
+/*
+async function runAnalysis() {
+    if (!currentImageBase64) return;
+
+    const resultsContainer = document.getElementById('results-container');
+    const analyzeBtn = document.getElementById('btn-analyze');
+    const errorContainer = document.getElementById('analysis-error');
+
+    analyzeBtn.disabled = true;
+    errorContainer.classList.add('hidden');
     errorContainer.textContent = ""; // Clear previous error
     
     resultsContainer.innerHTML = `<div class="flex flex-col items-center"><p class="animate-pulse text-sky-600 font-bold">AI Analyzing Waves...</p></div>`;
@@ -173,7 +229,7 @@ async function runAnalysis() {
         analyzeBtn.disabled = false;
     }
 }
-
+*/
 // --- Data Visualization ---
 function initCharts() {
     const prodCanvas = document.getElementById('prodChart');
