@@ -193,15 +193,15 @@
     
             try {
                 const API_KEY = "AIzaSyCxXnMK5fQE5Jf4e-DQhmd0kAJhbxjjFNQ";
-                // We use the direct URL - this is a different "door" into Gemini
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
-                const cleanBase64 = base64Img.split(',')[1];
+                // 1. Clean the Base64 string (Remove headers and any whitespace)
+                const cleanBase64 = base64Img.replace(/^data:image\/(png|jpg|jpeg);base64,/, "").replace(/\s/g, "");
 
                 const payload = {
                     contents: [{
                         parts: [
-                            { text: "Analyze this marine pollution image. Return ONLY JSON: { \"severity\": \"low/high\", \"detectedItems\": [], \"description\": \"\", \"recommendations\": [] }" },
+                            { text: "Analyze this marine pollution image. Return ONLY a JSON object: { \"severity\": \"low/high\", \"detectedItems\": [], \"description\": \"\", \"recommendations\": [] }" },
                             { inlineData: { mimeType: "image/jpeg", data: cleanBase64 } }
                         ]
                     }]
@@ -212,14 +212,19 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-    
-                if (!response.ok) throw new Error('API request failed');
 
                 const result = await response.json();
-        
-                // This navigation through the data is specific to the direct API
+
+                // 2. Check for API errors in the response
+                if (result.error) {
+                    throw new Error(result.error.message);
+                }
+
+                // 3. Extract and Parse the JSON
                 const aiText = result.candidates[0].content.parts[0].text;
                 const jsonMatch = aiText.match(/\{[\s\S]*\}/);
+                if (!jsonMatch) throw new Error("AI response was not in JSON format");
+        
                 const data = JSON.parse(jsonMatch[0]);
 
                 res.innerHTML = `
@@ -236,12 +241,19 @@
                     </div>`;
 
             } catch (err) {
-                console.error("FULL ERROR:", err);
-                    res.innerHTML = '<p class="text-red-500 text-xs font-bold text-center">AI Analysis failed. Try a smaller or different image.</p>';
+                console.error("DEBUG ERROR:", err);
+                // This will show you exactly why it failed in the UI
+                res.innerHTML = `
+                    <div class="text-rose-500 text-xs text-center p-4">
+                        <p class="font-bold">Analysis Failed</p>
+                        <p class="opacity-70 mt-1">${err.message.substring(0, 50)}...</p>
+                        <button onclick="analyze()" class="mt-4 text-sky-600 underline font-bold">Retry</button>
+                    </div>`;
             } finally {
                 btn.disabled = false;
-                }
+            }
         };
+        
         function initCharts() {
             if(pChart) pChart.destroy(); if(tChart) tChart.destroy();
             pChart = new Chart(document.getElementById('prodChart'), {
