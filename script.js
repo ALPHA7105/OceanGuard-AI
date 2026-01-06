@@ -1,3 +1,4 @@
+/*
 import { GoogleGenAI } from "@google/genai";
 import { helix } from "ldrs";
 
@@ -178,13 +179,13 @@ function initCharts() {
 }
 
 
+*/
 
 
 
 
 
 
-/*
 import { GoogleGenAI } from "@google/genai";
 import { helix } from "ldrs";
 
@@ -244,7 +245,7 @@ window.navigateTo = (section) => {
     activeSection = section;
 };
 
-/*
+
 // --- Navigation Logic ---
 window.navigateTo = (section) => {
     if (activeSection === section) return; // Don't reload if already here
@@ -268,7 +269,7 @@ window.navigateTo = (section) => {
     }
 };
 */
-/*
+
 // --- AI Detection Logic ---
 function initDetectHandlers() {
     const fileInput = document.getElementById('file-input');
@@ -367,7 +368,7 @@ async function runAnalysis() {
     }
 }
 
-/*
+
 async function runAnalysis() {
     if (!currentImageBase64) return;
 
@@ -418,7 +419,7 @@ async function runAnalysis() {
     }
 }
 */
-/*
+
 // --- Data Visualization ---
 function initCharts() {
     const prodCanvas = document.getElementById('prodChart');
