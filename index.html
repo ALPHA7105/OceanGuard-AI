@@ -193,7 +193,7 @@
     
             try {
                 const API_KEY = "AIzaSyCxXnMK5fQE5Jf4e-DQhmd0kAJhbxjjFNQ";
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+                const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
                 // 1. Clean the Base64 string (Remove headers and any whitespace)
                 const cleanBase64 = base64Img.replace(/^data:image\/(png|jpg|jpeg);base64,/, "").replace(/\s/g, "");
