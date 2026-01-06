@@ -195,7 +195,7 @@
                 const API_KEY = "AIzaSyCxXnMK5fQE5Jf4e-DQhmd0kAJhbxjjFNQ";
         
                 // THE NEW STABLE ADDRESS
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${API_KEY}`;
 
                 const cleanBase64 = base64Img.replace(/^data:image\/(png|jpg|jpeg);base64,/, "").replace(/\s/g, "");
 
@@ -223,8 +223,12 @@
                 }
 
                 const aiText = result.candidates[0].content.parts[0].text;
-                const jsonString = aiText.match(/\{[\s\S]*\}/)[0];
-                const data = JSON.parse(jsonString);
+
+                // This line ensures we ONLY grab the JSON part even if the AI talks too much
+                const jsonMatch = aiText.match(/\{[\s\S]*\}/);
+                if (!jsonMatch) throw new Error("AI did not return valid data format.");
+
+                const data = JSON.parse(jsonMatch[0]);
 
                 res.innerHTML = `
                     <div class="text-left w-full space-y-4 animate-fadeIn">
