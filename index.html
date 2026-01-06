@@ -189,19 +189,20 @@
     
             if (!base64Img) return;
             btn.disabled = true;
-            res.innerHTML = '<div class="flex flex-col items-center"><p class="animate-pulse text-sky-600 font-bold">AI Analyzing...</p></div>';
+            res.innerHTML = '<div class="flex flex-col items-center"><p class="animate-pulse text-sky-600 font-bold text-center">AI Analyzing...</p></div>';
     
             try {
                 const API_KEY = "AIzaSyCxXnMK5fQE5Jf4e-DQhmd0kAJhbxjjFNQ";
-                const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+        
+                // THE NEW STABLE ADDRESS
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
-                // 1. Clean the Base64 string (Remove headers and any whitespace)
                 const cleanBase64 = base64Img.replace(/^data:image\/(png|jpg|jpeg);base64,/, "").replace(/\s/g, "");
 
                 const payload = {
                     contents: [{
                         parts: [
-                            { text: "Analyze this marine pollution image. Return ONLY a JSON object: { \"severity\": \"low/high\", \"detectedItems\": [], \"description\": \"\", \"recommendations\": [] }" },
+                            { text: "Identify plastic pollution in this image. Return ONLY a JSON object: { \"severity\": \"low/high\", \"detectedItems\": [], \"description\": \"\", \"recommendations\": [] }" },
                             { inlineData: { mimeType: "image/jpeg", data: cleanBase64 } }
                         ]
                     }]
@@ -215,23 +216,21 @@
 
                 const result = await response.json();
 
-                // 2. Check for API errors in the response
+                // If it's a 404 again, we need to know exactly what Google said
                 if (result.error) {
+                    console.error("Google API says:", result.error);
                     throw new Error(result.error.message);
                 }
 
-                // 3. Extract and Parse the JSON
                 const aiText = result.candidates[0].content.parts[0].text;
-                const jsonMatch = aiText.match(/\{[\s\S]*\}/);
-                if (!jsonMatch) throw new Error("AI response was not in JSON format");
-        
-                const data = JSON.parse(jsonMatch[0]);
+                const jsonString = aiText.match(/\{[\s\S]*\}/)[0];
+                const data = JSON.parse(jsonString);
 
                 res.innerHTML = `
                     <div class="text-left w-full space-y-4 animate-fadeIn">
                         <span class="bg-sky-100 text-sky-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase">${data.severity} Severity</span>
                         <p class="text-gray-600 text-sm italic border-l-4 border-sky-400 pl-4">"${data.description}"</p>
-                        <div class="flex flex-wrap gap-2">
+                        <div class="flex flex-wrap gap-2 text-left">
                             ${data.detectedItems.map(i => `<span class="bg-gray-100 px-2 py-1 rounded text-[10px] font-bold">#${i}</span>`).join('')}
                         </div>
                         <div class="space-y-1 text-left">
@@ -241,13 +240,12 @@
                     </div>`;
 
             } catch (err) {
-                console.error("DEBUG ERROR:", err);
-                // This will show you exactly why it failed in the UI
+                console.error("EXPO DEBUG:", err);
                 res.innerHTML = `
                     <div class="text-rose-500 text-xs text-center p-4">
                         <p class="font-bold">Analysis Failed</p>
-                        <p class="opacity-70 mt-1">${err.message.substring(0, 50)}...</p>
-                        <button onclick="analyze()" class="mt-4 text-sky-600 underline font-bold">Retry</button>
+                        <p class="opacity-70 mt-1">${err.message}</p>
+                        <p class="mt-2 text-sky-600 text-[10px] underline cursor-pointer" onclick="window.location.reload()">Refresh Page</p>
                     </div>`;
             } finally {
                 btn.disabled = false;
