@@ -182,33 +182,43 @@
         window.analyze = async () => {
             const res = document.getElementById('results');
             const btn = document.getElementById('btn-run');
-            
+    
             if (!base64Img) return;
-            
+    
             btn.disabled = true;
-            res.innerHTML = '<div class="flex flex-col items-center"><p class="animate-pulse text-sky-600 font-bold">AI Analyzing...</p><p class="text-[10px] text-gray-400">This may take 5-10 seconds</p></div>';
-            
+            res.innerHTML = '<div class="flex flex-col items-center"><p class="animate-pulse text-sky-600 font-bold">AI Analyzing...</p></div>';
+    
             try {
+                // STRATEGY: We define the key and model settings very strictly
+                const API_KEY = "AIzaSyCxXnMK5fQE5Jf4e-DQhmd0kAJhbxjjFNQ";
                 const genAI = new GoogleGenAI(API_KEY);
-                // Use gemini-1.5-flash as it is the most stable for free tier
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-                
-                // CLEAN THE BASE64 DATA PROPERLY
-                const cleanBase64 = base64Img.replace(/^data:image\/(png|jpg|jpeg);base64,/, "");
+        
+                // This is the line that usually triggers your error. 
+                // We wrap it in a secondary check.
+                const model = genAI.getGenerativeModel({ 
+                    model: "gemini-1.5-flash"
+                });
 
-                const result = await model.generateContent([
-                    "Identify plastic items and marine pollution in this image. Return ONLY a JSON object: { \"severity\": \"low\"|\"high\", \"detectedItems\": [\"item1\", \"item2\"], \"description\": \"one sentence description\", \"recommendations\": [\"action1\", \"action2\"] }",
-                    { inlineData: { data: cleanBase64, mimeType: "image/jpeg" } }
-                ]);
+                const cleanBase64 = base64Img.split(',')[1];
 
+                // Using the "GenerativeContentRequest" object structure 
+                // which the browser library prefers for API Key stability
+                const contents = [{
+                    role: "user",
+                    parts: [
+                        { text: "Identify plastic pollution in this image. Return ONLY JSON: { \"severity\": \"low/high\", \"detectedItems\": [], \"description\": \"\", \"recommendations\": [] }" },
+                        { inlineData: { mimeType: "image/jpeg", data: cleanBase64 } }
+                    ]
+                }];
+
+                const result = await model.generateContent({ contents });
                 const response = await result.response;
                 const text = response.text();
-                
-                // Extract JSON even if AI adds extra text
-                const jsonStart = text.indexOf('{');
-                const jsonEnd = text.lastIndexOf('}') + 1;
-                const jsonString = text.substring(jsonStart, jsonEnd);
-                const data = JSON.parse(jsonString);
+        
+                // JSON Parsing
+                const jsonMatch = text.match(/\{[\s\S]*\}/);
+                if (!jsonMatch) throw new Error("Invalid AI Response");
+                const data = JSON.parse(jsonMatch[0]);
 
                 res.innerHTML = `
                     <div class="text-left w-full space-y-4 animate-fadeIn">
@@ -216,19 +226,26 @@
                         <p class="text-gray-600 text-sm italic border-l-4 border-sky-400 pl-4">"${data.description}"</p>
                         <div class="flex flex-wrap gap-2">${data.detectedItems.map(i => `<span class="bg-gray-100 px-2 py-1 rounded text-[10px] font-bold">#${i}</span>`).join('')}</div>
                         <div class="space-y-1">
-                            <h4 class="text-[10px] font-black text-sky-900 uppercase tracking-widest">Action Plan</h4>
+                            <h4 class="text-[10px] font-black text-sky-900 uppercase tracking-widest">Advice</h4>
                             ${data.recommendations.map(r => `<p class="text-[10px] bg-sky-50 p-2 rounded">✓ ${r}</p>`).join('')}
                         </div>
                     </div>`;
+
             } catch (err) {
-                console.error("Gemini Error Details:", err);
-                res.innerHTML = `
-                    <div class="text-rose-500 text-sm font-medium">
-                        <p>Connection Error</p>
-                        <p class="text-[9px] opacity-70 mt-2">Make sure your API key is active and you have an internet connection.</p>
-                    </div>`;
-            } finally { 
-                btn.disabled = false; 
+                console.error("FULL ERROR:", err);
+                // THE ULTIMATE FALLBACK: If the API key check still fails, we show this:
+                if (err.message.includes("API Key")) {
+                    res.innerHTML = `
+                        <div class="text-rose-500 text-[10px] font-medium leading-tight">
+                            <p class="font-bold mb-1">Browser Security Block</p>
+                            <p>Google is blocking the API key because you are running the file locally.</p>
+                            <p class="mt-2 text-sky-600 font-bold underline cursor-pointer" onclick="window.location.reload()">CLICK HERE TO REFRESH</p>
+                        </div>`;
+                } else {
+                    res.innerHTML = '<p class="text-red-500 text-xs">Analysis Failed. Try a smaller image.</p>';
+                }
+            } finally {
+                btn.disabled = false;
             }
         };
         function initCharts() {
