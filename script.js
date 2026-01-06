@@ -179,7 +179,7 @@ function initCharts() {
 }
 
 
-*/
+
 
 
 
@@ -269,7 +269,7 @@ window.navigateTo = (section) => {
     }
 };
 */
-
+/*
 // --- AI Detection Logic ---
 function initDetectHandlers() {
     const fileInput = document.getElementById('file-input');
@@ -418,7 +418,7 @@ async function runAnalysis() {
         analyzeBtn.disabled = false;
     }
 }
-*/
+
 
 // --- Data Visualization ---
 function initCharts() {
